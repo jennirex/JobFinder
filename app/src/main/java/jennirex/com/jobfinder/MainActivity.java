@@ -234,12 +234,24 @@ public class MainActivity extends AppCompatActivity implements GetProvidersInter
     @Override
     public void onGetJobsResponse(String response) {
         Log.d("Jobs", response);
-        int pos = provider_value.get(spinnerProvider.getSelectedItemPosition());
-        Intent intent = new Intent(getApplicationContext(),JobsActivity.class);
-        intent.putExtra("key_map",providers.get(pos).toString());
-        intent.putExtra("job_results",response);
-        startActivity(intent);
-        showProgressDialog(false);
+        try {
+            JSONArray jsonArray = new JSONArray(response);
+            if (jsonArray.length() > 0) {
+
+                int pos = provider_value.get(spinnerProvider.getSelectedItemPosition());
+                Intent intent = new Intent(getApplicationContext(), JobsActivity.class);
+                intent.putExtra("key_map", providers.get(pos).toString());
+                intent.putExtra("job_results", response);
+                startActivity(intent);
+                showProgressDialog(false);
+            } else {
+                showProgressDialog(false);
+                Toast.makeText(this,"No Jobs found.",Toast.LENGTH_LONG).show();
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
 
     }
 
