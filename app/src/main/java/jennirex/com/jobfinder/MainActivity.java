@@ -2,6 +2,7 @@ package jennirex.com.jobfinder;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.location.Geocoder;
 import android.support.v7.app.AppCompatActivity;
@@ -38,6 +39,7 @@ import java.util.List;
 import jennirex.com.jobfinder.Helpers.ApiRequest;
 import jennirex.com.jobfinder.Helpers.Constants;
 import jennirex.com.jobfinder.Helpers.ErrorHandler;
+import jennirex.com.jobfinder.Helpers.ProgressDialogHelper;
 import jennirex.com.jobfinder.Interfaces.GetJobsInterface;
 import jennirex.com.jobfinder.Interfaces.GetProvidersInterface;
 
@@ -51,15 +53,17 @@ public class MainActivity extends AppCompatActivity implements GetProvidersInter
     Button buttonFind;
     EditText editPosition;
     TextView editLocation;
-    private ProgressDialog pDialog;
+    ProgressDialogHelper progressDialogHelper = ProgressDialogHelper.getInstance();
+    Resources resources;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        resources = getResources();
 
         ApiRequest.GetProviderRequest(MainActivity.this);
-        showProgressDialog(true);
+        progressDialogHelper.showProgressDialog(this,resources.getString(R.string.please_wait),false);
         spinnerProvider = (Spinner) findViewById(R.id.spinner1);
         editLocation = (TextView) findViewById(R.id.editLocation);
         editPosition = (EditText) findViewById(R.id.editPosition);
@@ -116,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements GetProvidersInter
                             api_url += concat_string+jobject.getString("location")+concat_string+URLEncoder.encode(location);
                         }
                     }
-                    showProgressDialog(true);
+                    progressDialogHelper.showProgressDialog(MainActivity.this,resources.getString(R.string.please_wait),false);
                     ApiRequest.GetJobsRequest(MainActivity.this,api_url);
 
                 } catch (JSONException e){
@@ -134,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements GetProvidersInter
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view,
                                            int position, long id) {
-                    ((TextView) parent.getChildAt(0)).setTextSize((int)getResources().getDimension(R.dimen.mySpinnerTextSize));
+                    ((TextView) parent.getChildAt(0)).setTextSize((int)resources.getDimension(R.dimen.mySpinnerTextSize));
                     ((TextView) parent.getChildAt(0)).setGravity(Gravity.CENTER);
                     if(position == 0){
                         // Set the hint text color gray
@@ -176,6 +180,7 @@ public class MainActivity extends AppCompatActivity implements GetProvidersInter
 
     @Override
     public void onGetResponse(String response) {
+        progressDialogHelper.hideProgressDialog();
        if(errorHandler.getErrorMessage(response)){
            Toast.makeText(getApplicationContext(),response, Toast.LENGTH_LONG).show();
        } else {
@@ -222,7 +227,6 @@ public class MainActivity extends AppCompatActivity implements GetProvidersInter
                };
                spinnerProvider.setAdapter(providerAdapter);
                spinnerProvider.setOnItemSelectedListener(onItemSelectedListener);
-               showProgressDialog(false);
 
            } catch (JSONException e) {
                e.printStackTrace();
@@ -234,6 +238,7 @@ public class MainActivity extends AppCompatActivity implements GetProvidersInter
     @Override
     public void onGetJobsResponse(String response) {
         Log.d("Jobs", response);
+        progressDialogHelper.hideProgressDialog();
         try {
             JSONArray jsonArray = new JSONArray(response);
             if (jsonArray.length() > 0) {
@@ -243,9 +248,7 @@ public class MainActivity extends AppCompatActivity implements GetProvidersInter
                 intent.putExtra("key_map", providers.get(pos).toString());
                 intent.putExtra("job_results", response);
                 startActivity(intent);
-                showProgressDialog(false);
             } else {
-                showProgressDialog(false);
                 Toast.makeText(this,"No Jobs found.",Toast.LENGTH_LONG).show();
             }
         } catch (JSONException e) {
@@ -255,14 +258,4 @@ public class MainActivity extends AppCompatActivity implements GetProvidersInter
 
     }
 
-    public void showProgressDialog(boolean show){
-        if (show) {
-            pDialog = new ProgressDialog(this);
-            pDialog.setMessage(this.getResources().getString(R.string.please_wait));
-            pDialog.setCancelable(false);
-            pDialog.show();
-        } else {
-            pDialog.dismiss();
-        }
-    }
 }

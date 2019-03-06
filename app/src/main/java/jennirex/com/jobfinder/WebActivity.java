@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.webkit.WebResourceError;
@@ -12,9 +13,12 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
+import jennirex.com.jobfinder.Helpers.ProgressDialogHelper;
+
 public class WebActivity extends AppCompatActivity {
     WebView webView;
-    private ProgressDialog pDialog;
+    ProgressDialogHelper progressDialogHelper = ProgressDialogHelper.getInstance();
+    Resources resources;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,13 +26,14 @@ public class WebActivity extends AppCompatActivity {
         setContentView(R.layout.activity_web);
 
         webView = (WebView) findViewById(R.id.webView);
+        resources = getResources();
 
         Intent intent = getIntent();
         String url = intent.getStringExtra("job_url");
 
         webView  = new WebView(this);
 
-        showProgressDialog(true);
+        progressDialogHelper.showProgressDialog(this,resources.getString(R.string.please_wait),false);
 
         webView.getSettings().setJavaScriptEnabled(true); // enable javascript
 
@@ -49,7 +54,7 @@ public class WebActivity extends AppCompatActivity {
 
             @Override
             public void onPageFinished(WebView view, String url) {
-               showProgressDialog(false);
+               progressDialogHelper.hideProgressDialog();
             }
         });
 
@@ -58,14 +63,4 @@ public class WebActivity extends AppCompatActivity {
 
     }
 
-    public void showProgressDialog(boolean show){
-        if (show) {
-            pDialog = new ProgressDialog(this);
-            pDialog.setMessage(this.getResources().getString(R.string.please_wait));
-            pDialog.setCancelable(false);
-            pDialog.show();
-        } else {
-            pDialog.dismiss();
-        }
-    }
 }
